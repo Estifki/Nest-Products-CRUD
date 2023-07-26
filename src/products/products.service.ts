@@ -1,21 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { ProductsModel } from './products.model';
-
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { ProductInterface } from './products.model';
 @Injectable()
 export class ProductsService {
-  products: ProductsModel[] = [];
+  constructor(
+    @InjectModel('Products')
+    private readonly productModel: Model<ProductInterface>,
+  ) {}
 
-  addProduct(title: String, desc: String, price: number) {
-    const id = Math.random().toString();
-    const newProduct = new ProductsModel(id, title, desc, price);
-    this.products.push(newProduct);
+  async addProduct(title: string, description: string, price: number) {
+    const newProduct = new this.productModel({
+      title,
+      description,
+      price,
+    });
+    const response = await newProduct.save();
     return {
       message: 'Product Added Sucessfully',
-      Product: newProduct,
+      product: response,
     };
   }
 
-  getAllProducts() {
-    return [...this.products];
+  async getAllProducts() {
+    const products = await this.productModel.find();
+    return products;
   }
 }
